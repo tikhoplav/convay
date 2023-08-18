@@ -26,22 +26,43 @@ export default function Renderer(gl) {
 	const uResolution = gl.getUniformLocation(prog, 'uResolution')
 	const uTransform = gl.getUniformLocation(prog, 'uTransform')
 
-	const vbo = gl.createBuffer()
-	gl.bindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.bufferData(gl.ARRAY_BUFFER, 512, gl.DYNAMIC_DRAW)
-
-	const vao = gl.createVertexArray();
-	gl.bindVertexArray(vao);
-
-	gl.vertexAttribPointer(0, 1, gl.FLOAT, false, 8, 0);
-	gl.enableVertexAttribArray(0);
-
-	gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 8, 4);
-	gl.enableVertexAttribArray(1);
-
-	gl.bindBuffer(gl.ARRAY_BUFFER, null)
-	gl.bindVertexArray(null)
 	gl.useProgram(null)
+
+	let points
+	let vbo
+	let vao
+
+	const createBuffer = doubledPoints => {
+		if (points * 2 >= doubledPoints) return
+    points = doubledPoints / 2
+
+		gl.useProgram(prog)
+
+		if (vbo) gl.deleteBuffer(vbo)
+
+		vbo = gl.createBuffer()
+		gl.bindBuffer(gl.ARRAY_BUFFER, vbo)
+		gl.bufferData(gl.ARRAY_BUFFER, 32 * doubledPoints, gl.DYNAMIC_DRAW)
+
+		if (vao) gl.deleteVertexArray(vao)
+
+    vao = gl.createVertexArray()
+    gl.bindVertexArray(vao)
+
+    gl.vertexAttribPointer(0, 1, gl.FLOAT, false, 8, 0)
+    gl.enableVertexAttribArray(0)
+
+    gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 8, 4)
+    gl.enableVertexAttribArray(1)
+
+    gl.bindVertexArray(null)
+
+    const dim = Math.sqrt(points)
+    gl.uniform2f(uDimensions, dim, dim)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, null)
+    gl.useProgram(null)
+	}
 
 	const update = data => {
 		gl.useProgram(prog)
@@ -49,14 +70,6 @@ export default function Renderer(gl) {
 		gl.bindBuffer(gl.ARRAY_BUFFER, vbo)
 		gl.bufferSubData(gl.ARRAY_BUFFER, 0, data)
 		gl.bindBuffer(gl.ARRAY_BUFFER, null)
-
-		gl.useProgram(null)
-	}
-
-	const setDimensions = value => {
-		gl.useProgram(prog)
-
-		gl.uniform2f(uDimensions, value, value)
 
 		gl.useProgram(null)
 	}
@@ -88,14 +101,14 @@ export default function Renderer(gl) {
 		gl.clear(gl.COLOR_BUFFER_BIT)
 		gl.enable(gl.DEPTH_TEST)
 
-		gl.drawArrays(gl.POINTS, 0, 64)
+		gl.drawArrays(gl.POINTS, 0, points)
 
 		gl.bindVertexArray(null)
 		gl.useProgram(null)
 	}
 
 	return {
-		setDimensions,
+		createBuffer,
 		setTransform,
 		resize,
 		update,

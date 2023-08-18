@@ -1,8 +1,8 @@
 use warp::Filter;
-use tokio::sync::broadcast;
-use futures_util::{SinkExt, TryFutureExt, StreamExt};
-use tokio::time::{sleep, Duration};
-use rand::Rng;
+use tokio::sync::{broadcast};
+use futures_util::{SinkExt, StreamExt};
+use tokio::time::{sleep, Instant, Duration};
+use convay;
 
 #[tokio::main]
 async fn main() {
@@ -13,22 +13,20 @@ async fn main() {
 	let emitter = tx.clone();
 
 	tokio::task::spawn(async move {
+		let mut state = convay::State::new(512);
+
 		loop {
-			let now = std::time::SystemTime::now();
+			let timer = Instant::now();
 
-			sleep(Duration::from_millis(300)).await;
+			state.tick();
+			println!("Tick {:#?}", timer.elapsed());
 
-			{
-				let mut rng = rand::thread_rng();
-				let val: Vec<u8> = rng.gen::<f64>().to_le_bytes().to_vec();
+			tx.send(state.to_vec()).unwrap();
+			println!("Send {:#?}", timer.elapsed());
 
-				match now.elapsed() {
-					Ok(elapsed) => {
-						tx.send(val).unwrap();
-						println!("Tick {:#?}", elapsed);
-					},
-					Err(e) => eprintln!("Failed to elapse: {}", e),
-				};
+			let dt = Duration::from_millis(60).saturating_sub(timer.elapsed());
+			if !dt.is_zero() {
+				sleep(dt).await;
 			}
 		}
 	});
@@ -57,11 +55,16 @@ async fn on_connect(mut sub: broadcast::Receiver<Vec<u8>>, socket: warp::ws::Web
 	// the hashmap.
 	tokio::task::spawn(async move {
 		loop {
-			let msg = sub.recv().await.unwrap();
-			let b = warp::filters::ws::Message::binary(msg);
-            tx.send(b).unwrap_or_else(|e| {
-				eprintln!("error writing to socket: {}", e);
-			}).await;
+            let result = tx.send(
+            	warp::filters::ws::Message::binary(
+            		sub.recv().await.unwrap()
+            	)
+            ).await;
+
+            if result.is_err() {
+            	// Release user resources and exit loop.
+            	return;
+            }
 		}
     });	
 
@@ -69,15 +72,7 @@ async fn on_connect(mut sub: broadcast::Receiver<Vec<u8>>, socket: warp::ws::Web
 	// decode the message (via network module) and turn into the action
 	// object and send into game buffer (probably just a channel).
 	while let Some(res) = rx.next().await {
-		let msg = match res {
-			Ok(msg) => msg,
-			Err(e) => {
-				eprintln!("error reading from socket: {}", e);
-				break;
-			}
-		};
+		let msg = res.unwrap();
 		println!("message received: {:?}", msg)
 	}
-
-	// Handle client disconnection, release resources.
 }

@@ -10,20 +10,16 @@
 	<canvas id='main'></canvas>
 	<script type="module">
 		import Rendrer from './modules/renderer.js'
-		import Socket from './modules/socket.js'
+		import Socket, { decode } from './modules/socket.js'
 
 		const canvas = document.getElementById('main')
 		const ctx = canvas.getContext('webgl2')
 		if (!ctx) throw Error('Canvas ctx unavailable')
 
-		let dimensions = 8
-		let scale = 1
-
 		const rend = Rendrer(ctx)
 
-		rend.setDimensions(dimensions)
+		let scale = 1
 		rend.setTransform(0, 0, scale)
-
 		document.addEventListener('wheel', ({ deltaY }) => {
 			const x = scale * (1 - Math.sign(deltaY) * 0.05)
 			scale = Math.min(Math.max(x, 1), 100)
@@ -36,35 +32,22 @@
 			canvas.height = height
 			rend.resize()
 		}
-		window.onresize() // apply resolution before first draw
+		window.onresize()
 
 		const socket = Socket()
 
-		// When first message is received set board dimensions
-		socket.onmessage = async ({ data }) => {
-			const buff = await data.arrayBuffer()
-			const map = new Uint8Array(buff)
-			const cells = new Float32Array(128)
-			for (let i = 0; i < map.length; i ++) {
-				cells[i * 16]      = i * 8 + 0
-				cells[i * 16 +  1] = map[i] >> 0 & 0x00000001
-				cells[i * 16 +  2] = i * 8 + 1
-				cells[i * 16 +  3] = map[i] >> 1 & 0x00000001
-				cells[i * 16 +  4] = i * 8 + 2
-				cells[i * 16 +  5] = map[i] >> 2 & 0x00000001
-				cells[i * 16 +  6] = i * 8 + 3
-				cells[i * 16 +  7] = map[i] >> 3 & 0x00000001
-				cells[i * 16 +  8] = i * 8 + 4
-				cells[i * 16 +  9] = map[i] >> 4 & 0x00000001
-				cells[i * 16 + 10] = i * 8 + 5
-				cells[i * 16 + 11] = map[i] >> 5 & 0x00000001
-				cells[i * 16 + 12] = i * 8 + 6
-				cells[i * 16 + 13] = map[i] >> 6 & 0x00000001
-				cells[i * 16 + 14] = i * 8 + 7
-				cells[i * 16 + 15] = map[i] >> 7 & 0x00000001
+		const onFirst = async pack => {
+			const data = await decode(pack)
+			rend.createBuffer(data.length)
+			rend.update(data)
+
+			socket.onmessage = async pack => {
+				rend.update(await decode(pack))
 			}
-			rend.update(cells)
+
+			socket.removeEventListener('message', onFirst)
 		}
+		socket.onmessage = onFirst
 
 		const frame = dt => {
 			rend.draw()
