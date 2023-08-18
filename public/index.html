@@ -18,12 +18,12 @@
 
 		const rend = Rendrer(ctx)
 
-		let scale = 1
+		let scale = 10
+		let desiredScale = scale
 		rend.setTransform(0, 0, scale)
 		document.addEventListener('wheel', ({ deltaY }) => {
-			const x = scale * (1 - Math.sign(deltaY) * 0.05)
-			scale = Math.min(Math.max(x, 1), 100)
-			rend.setTransform(0, 0, scale)
+			const x = scale * (1 - Math.sign(deltaY) * 0.5)
+			desiredScale = Math.min(Math.max(x, 1), 100)
 		})
 
 		window.onresize = () => {
@@ -37,19 +37,25 @@
 		const socket = Socket()
 
 		const onFirst = async pack => {
-			const data = await decode(pack)
+			const [data, count] = await decode(pack)
 			rend.createBuffer(data.length)
-			rend.update(data)
+			rend.update(data, count)
 
 			socket.onmessage = async pack => {
-				rend.update(await decode(pack))
+				const [data, count] = await decode(pack)
+				rend.update(data, count)
 			}
 
 			socket.removeEventListener('message', onFirst)
 		}
-		socket.onmessage = onFirst
+		socket.addEventListener('message', onFirst)
 
 		const frame = dt => {
+			if (Math.abs(scale - desiredScale) / scale > 0.01) {
+				scale = scale - (scale - desiredScale) / 50
+				rend.setTransform(0, 0, scale)
+			}
+
 			rend.draw()
 			window.requestAnimationFrame(frame)
 		}

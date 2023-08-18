@@ -24,7 +24,7 @@ async fn main() {
 			tx.send(state.to_vec()).unwrap();
 			println!("Send {:#?}", timer.elapsed());
 
-			let dt = Duration::from_millis(60).saturating_sub(timer.elapsed());
+			let dt = Duration::from_millis(90).saturating_sub(timer.elapsed());
 			if !dt.is_zero() {
 				sleep(dt).await;
 			}

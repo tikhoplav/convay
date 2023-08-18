@@ -1,4 +1,5 @@
 use rand;
+use std::fmt;
 mod field;
 mod network;
 
@@ -16,7 +17,7 @@ impl State {
 			let cell: bool = rand::random();
 			cells[i] = cell as u8;
 		}
-
+		
 		Self { width, cells }
 	}
 
@@ -35,5 +36,17 @@ impl State {
 
 	pub fn to_vec(&self) -> Vec<u8> {
 		network::pack(&self.cells[..])
+	}
+}
+
+impl fmt::Debug for State {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		for i in 0..self.width {
+			for j in 0..self.width {
+				write!(f, "{}", self.cells[i + j * self.width]).unwrap();
+			}
+			write!(f, "\n").unwrap();
+		}
+		Ok(())
 	}
 }

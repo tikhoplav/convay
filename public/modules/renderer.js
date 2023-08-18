@@ -28,13 +28,13 @@ export default function Renderer(gl) {
 
 	gl.useProgram(null)
 
-	let points
+	let capacity
 	let vbo
 	let vao
 
-	const createBuffer = doubledPoints => {
-		if (points * 2 >= doubledPoints) return
-    points = doubledPoints / 2
+	const createBuffer = size => {
+		if (capacity >= size) return
+    capacity = size
 
 		gl.useProgram(prog)
 
@@ -42,31 +42,30 @@ export default function Renderer(gl) {
 
 		vbo = gl.createBuffer()
 		gl.bindBuffer(gl.ARRAY_BUFFER, vbo)
-		gl.bufferData(gl.ARRAY_BUFFER, 32 * doubledPoints, gl.DYNAMIC_DRAW)
+		gl.bufferData(gl.ARRAY_BUFFER, 8 * capacity, gl.DYNAMIC_DRAW)
 
 		if (vao) gl.deleteVertexArray(vao)
 
     vao = gl.createVertexArray()
     gl.bindVertexArray(vao)
 
-    gl.vertexAttribPointer(0, 1, gl.FLOAT, false, 8, 0)
+    gl.vertexAttribPointer(0, 1, gl.FLOAT, true, 4, 0)
     gl.enableVertexAttribArray(0)
-
-    gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 8, 4)
-    gl.enableVertexAttribArray(1)
 
     gl.bindVertexArray(null)
 
-    const dim = Math.sqrt(points)
+    const dim = Math.sqrt(capacity)
     gl.uniform2f(uDimensions, dim, dim)
 
     gl.bindBuffer(gl.ARRAY_BUFFER, null)
     gl.useProgram(null)
 	}
 
-	const update = data => {
+	let points
+	const update = (data, limit) => {
 		gl.useProgram(prog)
 
+		points = limit
 		gl.bindBuffer(gl.ARRAY_BUFFER, vbo)
 		gl.bufferSubData(gl.ARRAY_BUFFER, 0, data)
 		gl.bindBuffer(gl.ARRAY_BUFFER, null)
@@ -122,43 +121,30 @@ uniform vec2 uResolution;
 uniform vec4 uTransform;
 
 layout(location = 0) in float idx;
-layout(location = 1) in float alive;
-
-out vec4 vColor;
 
 void main() {
-	// calculate cell position based on index
-	float x = mod(idx, uDimensions.x);
-	float y = floor(idx / uDimensions.x);
-
-	// center the board at the origin, tanslating cells coordinates
-	vec2 pos = vec2(x, y) - uDimensions / 2.0;
-
-	// apply transform and scale
-	pos = (pos + vec2(uTransform)) * uTransform.z;
-
-	// each cell is a square based on current scale
 	gl_PointSize = uTransform.z;
 
-	// which means that position of each cell needs to be shifted
-	// to place a cell into a center of it's square
-	pos = pos + vec2(gl_PointSize, gl_PointSize) / 2.0;
+	// Convert index into relative coordinates.
+	float x = mod(idx, uDimensions.x);
+	float y = -1.0 * floor(idx / uDimensions.x);
+	vec2 pos = 2.0 * vec2(x, y) / uDimensions + vec2(-1.0, 1.0);
 
-	// convert position into a pixel space
-	pos = pos * 2.0 / uResolution;
+	// Offset cell to the center of it's square (pixel with width).
+	pos = pos + vec2(1.0, -1.0) / uDimensions;
+
+	// Scale and transform center of the field.
+	pos = (pos + vec2(uTransform)) * uTransform.z;
+
+	// Convert coordnates to screen space.
+	pos = pos * uDimensions / uResolution;
 
 	gl_Position = vec4(pos, 0, 1);
-
-	vColor = vec4(alive, alive, alive, 1);
 }`
 
 const fragmentShader = `#version 300 es
 precision highp float;
-
-in vec4 vColor;
-
 out vec4 diffuseColor;
-
 void main() {
-  diffuseColor = vColor;
+  diffuseColor = vec4(1.0, 1.0, 1.0, 1.0);
 }`
