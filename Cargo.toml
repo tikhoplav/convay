@@ -8,3 +8,10 @@ warp = "0.3"
 tokio = { version = "1.16", features = ["full"] }
 futures-util = { version = "0.3", default-features = false, features = ["sink"] }
 rand = { version = "0.8.5" }
+
+[dev-dependencies]
+criterion = { version = "0.4" }
+
+[[bench]]
+name = "state_update"
+harness = false
