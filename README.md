@@ -1,8 +1,8 @@
-# Covay's game of life.
+# Conway's game of life.
 
 ![demo](https://github.com/tikhoplav/convay/assets/62797411/a04b2115-a197-44a7-8a0d-61c80be31f82)
 
-This project is a tribute to [Covay's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) authored by John Horton Conway.
+This project is a tribute to [Coway's Game of Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) authored by John Horton Conway.
 
 ## Roadmap
 
