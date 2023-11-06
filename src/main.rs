@@ -2,7 +2,7 @@ use warp::Filter;
 use tokio::sync::broadcast;
 use futures_util::{SinkExt, StreamExt};
 use tokio::time::{sleep, Instant, Duration};
-use convay;
+use conway;
 
 #[tokio::main]
 async fn main() {
@@ -13,7 +13,7 @@ async fn main() {
     let emitter = tx.clone();
 
     tokio::task::spawn(async move {
-	let mut state = convay::State::new(512);
+	let mut state = conway::State::new(512);
 
 	loop {
 	    let timer = Instant::now();
