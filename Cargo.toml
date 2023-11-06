@@ -12,3 +12,7 @@ criterion = { version = "0.4" }
 [[bench]]
 name = "state_update"
 harness = false
+
+[[bench]]
+name = "stack_vs_heap"
+harness = false
