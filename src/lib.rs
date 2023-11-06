@@ -1,52 +1,133 @@
+#![cfg_attr(not(test), no_std)]
 use rand;
-use std::fmt;
-mod field;
-mod network;
 
-pub struct State {
-	pub width: usize,
-	pub cells: Vec<u8>,
+pub type State<const N: usize> = [[u8; N]; N];
+
+/// Create a new empty NxN state
+pub fn new<const N: usize>() -> State<N> {
+	[[0u8; N]; N]
 }
 
-impl State {
-	// TODO: add adility to seed random engine.
-	pub fn new(width: usize) -> Self {
-		let mut cells = vec![0; width * width];
-
-		for i in 0..cells.len() {
+/// Create a new NxN state with randomly seeded cells
+///
+/// TODO:: let function use a provided seed
+pub fn random<const N: usize>() -> State<N> {
+	let mut state = new();
+	for y in 0..N {
+		for x in 0..N {
 			let cell: bool = rand::random();
-			cells[i] = cell as u8;
+			state[y][x] = cell as u8;
 		}
-		
-		Self { width, cells }
 	}
+	state
+}
 
-	pub fn tick(&mut self) {
-		let f = &self.cells[..];
-		let mut m: Vec<u8> = vec![0; f.len()];
-		for i in 0..f.len() {
-			let n = field::sum_adjacents(i, self.width, f);
-			m[i] = match f[i] != 0 {
-				true => (n > 1 && n < 4) as u8,
-				false => (n == 3) as u8,
+/// Calculate next state from the previous one
+pub fn tick<const N: usize>(prev: &State<N>, next: &mut State<N>) {
+	for y in 0..N {
+		for x in 0..N {
+			let x0 = match x.checked_sub(1) {
+				Some(x0) => x0,
+				None => N - 1,
+			};
+
+			let y0 = match y.checked_sub(1) {
+				Some(y0) => y0,
+				None => N - 1,
+			};
+
+			let x1 = (x + 1) % N;
+			let y1 = (y + 1) % N;
+
+			let n =
+				prev[y0][x0] + prev[y0][x] + prev[y0][x1] +
+				prev[ y][x0]               + prev[ y][x1] +
+				prev[y1][x0] + prev[y1][x] + prev[y1][x1]
+			;
+
+			next[y][x] = match prev[y][x] > 0 {
+				true  => (n > 1 && n < 4) as u8,
+				false => (n == 3) as u8, 
 			};
 		}
-		self.cells = m;
-	}
-
-	pub fn to_vec(&self) -> Vec<u8> {
-		network::pack(&self.cells[..])
 	}
 }
 
-impl fmt::Debug for State {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-		for i in 0..self.width {
-			for j in 0..self.width {
-				write!(f, "{}", self.cells[i + j * self.width]).unwrap();
-			}
-			write!(f, "\n").unwrap();
-		}
-		Ok(())
+#[cfg(test)]
+mod test {
+	use super::{State, new, tick};
+
+	#[test]
+	fn slider_test() {
+		let prev: State<8> = [
+			[0, 0, 1, 0, 0, 0, 0, 0],
+			[1, 0, 1, 0, 0, 0, 0, 0],
+			[0, 1, 1, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+		];
+
+		let mut next: State<8> = new();
+		tick(&prev, &mut next);
+
+		assert_eq!([
+			[0, 1, 0, 0, 0, 0, 0, 0],
+			[0, 0, 1, 1, 0, 0, 0, 0],
+			[0, 1, 1, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+		], next);
+
+		let prev = next;
+		let mut next: State<8> = new();
+		tick(&prev, &mut next);
+
+		assert_eq!([
+			[0, 0, 1, 0, 0, 0, 0, 0],
+			[0, 0, 0, 1, 0, 0, 0, 0],
+			[0, 1, 1, 1, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+		], next);
+
+		let prev = next;
+		let mut next: State<8> = new();
+		tick(&prev, &mut next);
+
+		assert_eq!([
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 1, 0, 1, 0, 0, 0, 0],
+			[0, 0, 1, 1, 0, 0, 0, 0],
+			[0, 0, 1, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+		], next);
+
+		let prev = next;
+		let mut next: State<8> = new();
+		tick(&prev, &mut next);
+
+		assert_eq!([
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 1, 0, 0, 0, 0],
+			[0, 1, 0, 1, 0, 0, 0, 0],
+			[0, 0, 1, 1, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+			[0, 0, 0, 0, 0, 0, 0, 0],
+		], next);
+
 	}
 }
