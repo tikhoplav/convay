@@ -4,7 +4,7 @@ use criterion::{
     criterion_main,
     Criterion
 };
-use convay::State;
+use conway::State;
 
 fn state_update_bench(c: &mut Criterion) {
     let mut state = black_box(
