@@ -23,7 +23,7 @@ This project is a tribute to [Coway's Game of Life](https://en.wikipedia.org/wik
 ![image](https://github.com/tikhoplav/conway/assets/62797411/afd7d8c6-7810-4df7-ac1b-3eccf7dfd6ad)
 
 Benchmark is performed on a state 1024x1024 cells, the fact that optimized
-state takes up 8 times less space is not accounted:
+state takes 8 times less space is not accounted:
 
 ```
 $ cargo bench --bench opt_vs_naive
@@ -41,19 +41,19 @@ Found 7 outliers among 100 measurements (7.00%)
 
 <br>
 
-- [] Re-implement networking;
-    - [] Change serialization implementation to write into a given slice;
-    - [] Intriduce thread-safe (only main thread writes) shared byte buffer;
-    - [] Channels are used to receive only a `ready` signal, and should read
+- [ ] Re-implement networking;
+    - [ ] Change serialization implementation to write into a given slice;
+    - [ ] Intriduce thread-safe (only main thread writes) shared byte buffer;
+    - [ ] Channels are used to receive only a `ready` signal, and should read
          from the shared buffer instead;
 
 <br>
 
-- [] Re-implement the renderer;
-    - [] Remove the state / coordinates computation and instead render a raw
+- [ ] Re-implement the renderer;
+    - [ ] Remove the state / coordinates computation and instead render a raw
          state (from the socket) onto a monochrome texture, applied to a 
          singular rectangular;
-    - [] The camera position and zoom should take effect on the rect position
+    - [ ] The camera position and zoom should take effect on the rect position
          and scale instead;
 
 <br>
