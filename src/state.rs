@@ -1,9 +1,36 @@
 //! Bit state
 
 use core::iter::once;
+use crate::rand::fill;
 
+/// Conway's game of Life state.
+///
+/// Represents a 2D grid with cells of two variants: dead or alive.
+/// Each set of 8 horizontally consecutive cells is packed into a single
+/// byte (a `strip`);
 pub type State<const W: usize, const H: usize> = [[u8; W]; H];
 
+/// Create an empty game state of sertain dimensions.
+///
+/// A state created with this function is guarantied to be usable with
+/// `tick` function as it performs a following checks:
+/// - Height of the state must be modulo 8;
+/// - Width of the state must be modulo 8 (64 cells);
+pub const fn new_state<const W: usize, const H: usize>() -> State<W, H> {
+    assert!(H % 8 == 0, "Height must be modulo 8");
+    assert!(W % 64 == 0, "Width must be modulo 8");
+    [[0u8; W]; H]
+}
+
+/// Create a randomly filled state
+#[cfg(feature = "rand")]
+pub fn random_state<const W: usize, const H: usize>(seed: &[u8]) -> State<W, H> {
+    let mut state: State<W, H> = new_state();
+    fill(&mut state, seed);
+    state
+}
+
+/// Generate a new game state applying Rules to the previous state.
 pub fn tick<const W: usize, const H: usize>(prev: &State<W, H>, next: &mut State<W, H>) {
     for h in (0..H).step_by(8) {
         for w in (0..W).step_by(8) {

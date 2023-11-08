@@ -1,4 +1,4 @@
-use rand::{self, rngs::StdRng, RngCore, SeedableRng};
+use crate::rand::fill;
 
 pub type State<const N: usize> = [[u8; N]; N];
 
@@ -8,20 +8,10 @@ pub fn new<const N: usize>() -> State<N> {
 }
 
 /// Create a new NxN state with randomly seeded cells
-///
-/// TODO:: let function use a provided seed
-pub fn random<const N: usize>(seed: [u8; 32]) -> State<N> {
-    let mut gen: StdRng = SeedableRng::from_seed(seed);
+#[cfg(feature = "rand")]
+pub fn random<const N: usize>(seed: &[u8]) -> State<N> {
     let mut state = new();
-
-    for y in 0..N {
-        let mut row = [0u8; N];
-        gen.fill_bytes(&mut row);
-
-        for x in 0..N {
-            state[y][x] = row[x] % 2;
-        }
-    }
+    fill(&mut state, seed);
     state
 }
 
