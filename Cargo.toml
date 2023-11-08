@@ -27,6 +27,11 @@ criterion = { version = "0.4" }
 
 
 
+
+[[bench]]
+name = "hd_bench"
+harness = false
+
 [[bench]]
 name = "opt_vs_naive"
 harness = false

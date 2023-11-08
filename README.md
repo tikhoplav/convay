@@ -19,6 +19,7 @@ This project is a tribute to [Coway's Game of Life](https://en.wikipedia.org/wik
 - [x] Re-implement the state engine;
     - [x] Reduce memory allocations;
     - [x] Optimize cache usage (chunks maybe?);
+    - [ ] Add `perf` binary for simulation profiling;
 
 ![image](https://github.com/tikhoplav/conway/assets/62797411/afd7d8c6-7810-4df7-ac1b-3eccf7dfd6ad)
 
@@ -39,6 +40,26 @@ Found 7 outliers among 100 measurements (7.00%)
   7 (7.00%) high mild
 ```
 
+<br>
+
+As a result of the optimization the theoretical FPS for Full HD (1920x1080)
+monochromatic stream reached up to **1500**:
+
+![image](https://github.com/tikhoplav/conway/assets/62797411/edf884a0-95a5-4d60-8a6d-c9e577967a5b)
+
+```
+$ cargo bench --bench hd_bench
+    Finished bench [optimized] target(s) in 0.02s
+     Running benches/hd_bench.rs (target/release/deps/hd_bench-b422c080f657c130)
+1920x1080               time:   [660.23 µs 660.57 µs 661.02 µs]
+                        change: [+0.4505% +0.5554% +0.6634%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
+Found 9 outliers among 100 measurements (9.00%)
+  4 (4.00%) high mild
+  5 (5.00%) high severe
+```
+
+<br>
 <br>
 
 - [ ] Re-implement networking;

@@ -18,7 +18,7 @@ pub type State<const W: usize, const H: usize> = [[u8; W]; H];
 /// - Width of the state must be modulo 8 (64 cells);
 pub const fn new_state<const W: usize, const H: usize>() -> State<W, H> {
     assert!(H % 8 == 0, "Height must be modulo 8");
-    assert!(W % 64 == 0, "Width must be modulo 8");
+    assert!(W % 8 == 0, "Width must be modulo 8");
     [[0u8; W]; H]
 }
 
