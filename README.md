@@ -28,7 +28,7 @@ placing cells and cellular structures, so that simulation would catch them up.
 
 The concept of a *Cell* is taken directly from the Conway's definition, it is a
 unit of the two dimenstional orthogonal the space (a *World*), which at any
-given time is in one of two possible states: `live` (`1`) or `dead` (0).
+given time is in one of two possible states: `live` (`1`) or `dead` (`0`).
 
 Every *Cell* interacts with 8 adjacent *Cells*, it's neighbors, as showed in 
 the scheme bellow. A `dead` *Cell* can also be reffered as an `empty`, as the
@@ -47,12 +47,11 @@ the scheme bellow. A `dead` *Cell* can also be reffered as an `empty`, as the
 <br>
 
 The set of states of all the *Cells* of the *World* at any given moment in time 
-(or a simulation step) would be referred simply as *State*.
+(or a simulation step) would be referred simply as *State*. Each new *State* 
+(or a generation) is evaluated by applying the following rules to each *Cell* of
+the preceding one:
 
-Each new *State* (or generation) is evaluated by applying the following rules
-to each *Cell* of the preceding one:
-
-- A `live` *Cell* with 2 or 3 neighbors stays `live`, otherwise dies;
+- A `live` *Cell* with 2 or 3 neighbors stays `live`, otherwise becomes `dead`;
 - A `dead` *Cell* with exactly 3 `live` neighbors becomes `live`;
 
 The rules are applied to the all *Cells* simultaniously at a descrete moment (a 
